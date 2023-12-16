@@ -276,3 +276,24 @@ class PrivateRecipeApiTests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(recipe.tags.count(), 0)
+
+    def test_filter_by_tags(self):
+        """Test filter recipes by tags"""
+        recipe1 = create_recipe(user=self.user, title='recipe1')
+        recipe2 = create_recipe(user=self.user, title='recipe2')
+        recipe3 = create_recipe(user=self.user, title='recipe3')
+        tag1 = Tag.objects.create(user=self.user, name='chockolate')
+        tag2 = Tag.objects.create(user=self.user, name='Vegan')
+        recipe1.tags.add(tag1)
+        recipe2.tags.add(tag2)
+
+        res = self.client.get(RECIPES_URL, {'tags': f'{tag1.id},{tag2.id}'})
+
+        s1 = RecipeSerializer(recipe1)
+        s2 = RecipeSerializer(recipe2)
+        s3 = RecipeSerializer(recipe3)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn(s1.data, res.data)
+        self.assertIn(s2.data, res.data)
+        self.assertNotIn(s3.data, res.data)
+
